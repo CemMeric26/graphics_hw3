@@ -428,7 +428,7 @@ void initVBO()
 
 void init(){
 	ParseObj("bunny.obj");
-	ParseObj("cube.obj");
+	// ParseObj("cube.obj");
 
 	glEnable(GL_DEPTH_TEST);
 	initShaders();
@@ -445,13 +445,19 @@ void drawModel()
 
 	glDrawElements(GL_TRIANGLES, gFaces.size() * 3, GL_UNSIGNED_INT, 0);
 }
-glm::vec3 calculateBunnyPosition(float pathPosition)
-{
-	// This function calculates the bunny's position on the path
-	// For a straight path along the z-axis, it could be as simple as:
-	return glm::vec3(0, 0, -pathPosition);
-}
+// Global variable to keep track of the bunny's X position
+float bunnyPosX = 0.0f;
+float initialSpeed = 1.0f;
+float forwardSpeed= 1.0f;
 
+float computeHopHeight(float forwardSpeed, float time) {
+    float baseHopHeight = 1.0; // Base height of the hop
+    float speedFactor = forwardSpeed / initialSpeed; // Adjust based on your speed scale
+    float hopHeight = baseHopHeight * speedFactor;
+    float hopY = sin(time) * hopHeight; // Sinusoidal motion for hopping
+
+    return hopY;
+}
 
 void display()
 {
@@ -470,25 +476,28 @@ void display()
 	// glm::mat4 matR = glm::rotate<float>(glm::mat4(1.0), (-180. / 180.) * M_PI, glm::vec3(0.0, 1.0, 0.0));
 	// glm::mat4 matRz = glm::rotate(glm::mat4(1.0), angleRad, glm::vec3(0.0, 0.0, 1.0));
 	// modelingMatrix = matT * matRz * matR; // starting from right side, rotate around Y to turn back, then rotate around Z some more at each frame, then translate.
+	// modelingMatrix = matT * matS;
 
-	// or... (care for the order! first the very bottom one is applied)
-	//modelingMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0.f, 0.f, -3.f));
-	//modelingMatrix = glm::rotate(modelingMatrix, angleRad, glm::vec3(0.0, 0.0, 1.0));
-	//modelingMatrix = glm::rotate<float>(modelingMatrix, (-180. / 180.) * M_PI, glm::vec3(0.0, 1.0, 0.0));
+	// make the bunny jump up and down
+	static float jumpTime = 0;
+	float jumpHeight = 0.5;
+	float jumpY = sin(jumpTime) * jumpHeight;
+	float forwardSpeed = 0.2;
 
-	// Move the bunny along the path
-	static float pathPosition = 0;
-	pathPosition += 0.01; // This controls the speed of the bunny
-	glm::vec3 bunnyPosition = calculateBunnyPosition(pathPosition);
-	glm::mat4 matT = glm::translate(glm::mat4(1.0), bunnyPosition);
-
-	// Scale the bunny to the appropriate size
+	float hopY = computeHopHeight(forwardSpeed, jumpTime);
+	
+	// Compute the modeling matrix
 	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.5, 0.5, 0.5));
 
-	// Apply transformations to the bunny
-	modelingMatrix = matT * matS;
+	// Rotate the model 90 degrees clockwise around the Y-axis
+	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 
+	glm::mat4 matRz = glm::rotate(glm::mat4(1.0), glm::radians(+20.0f), glm::vec3(1.0, 0.0, 0.0));
 
+	// Translate the model
+	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(bunnyPosX, hopY, -3.f));
+
+    modelingMatrix = matT * matRz * matR *matS;
 
 	// Set the active program and the values of its uniform variables
 	glUseProgram(gProgram[activeProgramIndex]);
@@ -506,18 +515,18 @@ void display()
 	// Draw the environment (water surface, skybox)
 	// drawEnvironment();
 
-	angle += 0.9;
+	jumpTime += 0.25;
 }
+void updateHorizontalPosition(int key, float forwardSpeed) {
+    float baseMoveSpeed = 0.5; // Base speed for horizontal movement
+    float speedFactor = forwardSpeed / initialSpeed; // Adjust based on your speed scale
+    float moveSpeed = baseMoveSpeed * speedFactor;
 
-
-void drawObstacles()
-{
-	// Add code to draw your obstacles
-}
-
-void drawEnvironment()
-{
-	// Add code to draw the reflective water surface and skybox
+    if (key == GLFW_KEY_A) {
+        bunnyPosX -= moveSpeed; // Move left
+    } else if (key == GLFW_KEY_D) {
+        bunnyPosX += moveSpeed; // Move right
+    }
 }
 
 void reshape(GLFWwindow* window, int w, int h)
@@ -542,13 +551,29 @@ void reshape(GLFWwindow* window, int w, int h)
 	viewingMatrix = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0) + glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
 }
+void resetGame() {
+    // Reset the speed to its initial value
+    // speed = initialSpeed; // Replace 'speed' and 'initialSpeed' with your actual variable names
+
+    // Reset any other game state variables as needed
+    // For example, resetting the bunny's position
+    bunnyPosX = 0.0f;
+}
 
 void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	if (action == GLFW_PRESS) {
+        if (key == GLFW_KEY_A || key == GLFW_KEY_D) {
+            updateHorizontalPosition(key, forwardSpeed);
+        }
+    }
 	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	}
+	else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+        resetGame();
+    }
 	else if (key == GLFW_KEY_G && action == GLFW_PRESS)
 	{
 		activeProgramIndex = 0;
