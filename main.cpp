@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <GL/glew.h>
@@ -68,6 +69,18 @@ struct Face
 	GLuint vIndex[3], tIndex[3], nIndex[3];
 };
 
+struct Model {
+    vector<Vertex> gVertices;
+    vector<Texture> gTextures;
+    vector<Normal> gNormals;
+    vector<Face> gFaces;
+    GLuint vao; // Vertex Array Object
+    GLuint vbo; // Vertex Buffer Object
+    GLuint ebo; // Element Buffer Object (for faces/indices)
+
+    Model() : vao(0), vbo(0), ebo(0) {}
+};
+
 vector<Vertex> gVertices;
 vector<Texture> gTextures;
 vector<Normal> gNormals;
@@ -78,11 +91,13 @@ GLint gInVertexLoc, gInNormalLoc;
 int gVertexDataSizeInBytes, gNormalDataSizeInBytes;
 
 
+Model gBunnyModel, gQuadModel;
+
 
 bool isMovingLeft = false;
 bool isMovingRight = false;
 
-bool ParseObj(const string& fileName)
+bool ParseObj2(const string& fileName)
 {
 	fstream myfile;
 
@@ -212,6 +227,100 @@ bool ParseObj(const string& fileName)
 
 	return true;
 }
+
+bool ParseObj(const string& fileName, Model& model )
+{
+	fstream myfile;
+
+	// Open the input 
+	myfile.open(fileName.c_str(), std::ios::in);
+
+	if (myfile.is_open())
+	{
+		string curLine;
+
+		while (getline(myfile, curLine))
+		{
+			stringstream str(curLine);
+			GLfloat c1, c2, c3;
+			GLuint index[9];
+			string tmp;
+
+			if (curLine.length() >= 2)
+			{
+				if (curLine[0] == 'v')
+				{
+					if (curLine[1] == 't') // texture
+					{
+						str >> tmp; // consume "vt"
+						str >> c1 >> c2;
+						model.gTextures.push_back(Texture(c1, c2));
+						// model.gTextures.push_back(Texture(c1, c2));
+					}
+					else if (curLine[1] == 'n') // normal
+					{
+						str >> tmp; // consume "vn"
+						str >> c1 >> c2 >> c3;
+						model.gNormals.push_back(Normal(c1, c2, c3));
+					}
+					else // vertex
+					{
+						str >> tmp; // consume "v"
+						str >> c1 >> c2 >> c3;
+						model.gVertices.push_back(Vertex(c1, c2, c3));
+					}
+				}
+				else if (curLine[0] == 'f') // face
+				{
+					str >> tmp; // consume "f"
+					char c;
+					int vIndex[3], nIndex[3], tIndex[3];
+					str >> vIndex[0]; str >> c >> c; // consume "//"
+					str >> nIndex[0];
+					str >> vIndex[1]; str >> c >> c; // consume "//"
+					str >> nIndex[1];
+					str >> vIndex[2]; str >> c >> c; // consume "//"
+					str >> nIndex[2];
+
+					assert(vIndex[0] == nIndex[0] &&
+						vIndex[1] == nIndex[1] &&
+						vIndex[2] == nIndex[2]); // a limitation for now
+
+					// make indices start from 0
+					for (int c = 0; c < 3; ++c)
+					{
+						vIndex[c] -= 1;
+						nIndex[c] -= 1;
+						tIndex[c] -= 1;
+					}
+
+					model.gFaces.push_back(Face(vIndex, tIndex, nIndex));
+				}
+				else
+				{
+					cout << "Ignoring unidentified line in obj file: " << curLine << endl;
+				}
+			}
+
+			//data += curLine;
+			if (!myfile.eof())
+			{
+				//data += "\n";
+			}
+		}
+
+		myfile.close();
+	}
+	else
+	{
+		return false;
+	}
+
+	assert(model.gVertices.size() == model.gNormals.size());
+
+	return true;
+}
+
 
 bool ReadDataFromFile(
 	const string& fileName, ///< [in]  Name of the shader file
@@ -350,7 +459,7 @@ void initShaders()
 	}
 }
 
-void initVBO()
+void initVBO2()
 {
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -431,16 +540,90 @@ void initVBO()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(gVertexDataSizeInBytes));
 }
 
+void initVBO(Model& model)
+{
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    assert(vao > 0);
+    glBindVertexArray(vao);
+    cout << "vao = " << vao << endl;
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    assert(glGetError() == GL_NONE);
+
+    GLuint gVertexAttribBuffer, gIndexBuffer;
+    glGenBuffers(1, &gVertexAttribBuffer);
+    glGenBuffers(1, &gIndexBuffer);
+
+    assert(gVertexAttribBuffer > 0 && gIndexBuffer > 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexAttribBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBuffer);
+
+    int gVertexDataSizeInBytes = model.gVertices.size() * 3 * sizeof(GLfloat);
+    int gNormalDataSizeInBytes = model.gNormals.size() * 3 * sizeof(GLfloat);
+    int indexDataSizeInBytes = model.gFaces.size() * 3 * sizeof(GLuint);
+    GLfloat* vertexData = new GLfloat[model.gVertices.size() * 3];
+    GLfloat* normalData = new GLfloat[model.gNormals.size() * 3];
+    GLuint* indexData = new GLuint[model.gFaces.size() * 3];
+
+    for (int i = 0; i < model.gVertices.size(); ++i)
+    {
+        vertexData[3 * i] = model.gVertices[i].x;
+        vertexData[3 * i + 1] = model.gVertices[i].y;
+        vertexData[3 * i + 2] = model.gVertices[i].z;
+    }
+
+    for (int i = 0; i < model.gNormals.size(); ++i)
+    {
+        normalData[3 * i] = model.gNormals[i].x;
+        normalData[3 * i + 1] = model.gNormals[i].y;
+        normalData[3 * i + 2] = model.gNormals[i].z;
+    }
+
+    for (int i = 0; i < model.gFaces.size(); ++i)
+    {
+        indexData[3 * i] = model.gFaces[i].vIndex[0];
+        indexData[3 * i + 1] = model.gFaces[i].vIndex[1];
+        indexData[3 * i + 2] = model.gFaces[i].vIndex[2];
+    }
+
+    glBufferData(GL_ARRAY_BUFFER, gVertexDataSizeInBytes + gNormalDataSizeInBytes, 0, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, gVertexDataSizeInBytes, vertexData);
+    glBufferSubData(GL_ARRAY_BUFFER, gVertexDataSizeInBytes, gNormalDataSizeInBytes, normalData);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexDataSizeInBytes, indexData, GL_STATIC_DRAW);
+
+    // done copying to GPU memory; can free now from CPU memory
+    delete[] vertexData;
+    delete[] normalData;
+    delete[] indexData;
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(gVertexDataSizeInBytes));
+
+    // Store the VAO and VBO identifiers in the model object
+    model.vao = vao;
+    model.vbo = gVertexAttribBuffer;
+    // Optionally, store the index buffer if you need to access it later
+    model.ebo = gIndexBuffer;
+}
+
+
+
+
+
 void init(){
-	ParseObj("bunny.obj");
-	// ParseObj("cube.obj");
+	ParseObj("bunny.obj", gBunnyModel);
+	ParseObj("quad.obj", gQuadModel);
 
 	glEnable(GL_DEPTH_TEST);
 	initShaders();
-	initVBO();
+	initVBO(gBunnyModel);
+	initVBO(gQuadModel);
 }
 
-void drawModel()
+void drawModel2()
 {
 	//glBindBuffer(GL_ARRAY_BUFFER, gVertexAttribBuffer);
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBuffer);
@@ -450,6 +633,19 @@ void drawModel()
 
 	glDrawElements(GL_TRIANGLES, gFaces.size() * 3, GL_UNSIGNED_INT, 0);
 }
+
+void drawModel(const Model& model)
+{
+    // Bind the VAO of the model
+    glBindVertexArray(model.vao);
+
+    // Draw the model
+    glDrawElements(GL_TRIANGLES, model.gFaces.size() * 3, GL_UNSIGNED_INT, 0);
+
+    // Unbind the VAO
+    glBindVertexArray(0);
+}
+
 // Global variable to keep track of the bunny's X position
 float bunnyPosX = 0.0f;
 float initialSpeed = 1.0f;
@@ -485,14 +681,6 @@ void display()
 	static float angle = 0;
 
 	float angleRad = (float)(angle / 90.0) * M_PI;
-
-	// Compute the modeling matrix 
-	// glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(0.f, 0.f, -3.f));
-	// glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.5, 0.5, 0.5));
-	// glm::mat4 matR = glm::rotate<float>(glm::mat4(1.0), (-180. / 180.) * M_PI, glm::vec3(0.0, 1.0, 0.0));
-	// glm::mat4 matRz = glm::rotate(glm::mat4(1.0), angleRad, glm::vec3(0.0, 0.0, 1.0));
-	// modelingMatrix = matT * matRz * matR; // starting from right side, rotate around Y to turn back, then rotate around Z some more at each frame, then translate.
-	// modelingMatrix = matT * matS;
 
 	// make the bunny jump up and down
 	static float jumpTime = 0;
@@ -531,7 +719,8 @@ void display()
 	glUniform3fv(eyePosLoc[activeProgramIndex], 1, glm::value_ptr(eyePos));
 
 	// Draw the scene
-	drawModel();
+	drawModel(gBunnyModel);
+	drawModel(gQuadModel);
 
 
 	jumpTime += 0.25;
