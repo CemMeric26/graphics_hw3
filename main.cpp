@@ -77,6 +77,11 @@ GLuint gVertexAttribBuffer, gIndexBuffer;
 GLint gInVertexLoc, gInNormalLoc;
 int gVertexDataSizeInBytes, gNormalDataSizeInBytes;
 
+
+
+bool isMovingLeft = false;
+bool isMovingRight = false;
+
 bool ParseObj(const string& fileName)
 {
 	fstream myfile;
@@ -458,6 +463,17 @@ float computeHopHeight(float forwardSpeed, float time) {
 
     return hopY;
 }
+void updateHorizontalPosition(int key, float forwardSpeed) {
+    float baseMoveSpeed = 0.5; // Base speed for horizontal movement
+    float speedFactor = forwardSpeed / initialSpeed; // Adjust based on your speed scale
+    float moveSpeed = baseMoveSpeed * speedFactor;
+
+    if (key == GLFW_KEY_A) {
+        bunnyPosX -= moveSpeed; // Move left
+    } else if (key == GLFW_KEY_D) {
+        bunnyPosX += moveSpeed; // Move right
+    }
+}
 
 void display()
 {
@@ -482,9 +498,17 @@ void display()
 	static float jumpTime = 0;
 	float jumpHeight = 0.5;
 	float jumpY = sin(jumpTime) * jumpHeight;
-	float forwardSpeed = 0.2;
+	float forwardSpeed = 0.1;
 
 	float hopY = computeHopHeight(forwardSpeed, jumpTime);
+	if (isMovingLeft) {
+        // Logic to move left
+        bunnyPosX -= forwardSpeed;  // Adjust this line according to your position update logic
+    }
+    if (isMovingRight) {
+        // Logic to move right
+        bunnyPosX += forwardSpeed;  // Adjust this line according to your position update logic
+    }
 	
 	// Compute the modeling matrix
 	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.5, 0.5, 0.5));
@@ -509,24 +533,8 @@ void display()
 	// Draw the scene
 	drawModel();
 
-	// Draw obstacles
-	// drawObstacles();
-
-	// Draw the environment (water surface, skybox)
-	// drawEnvironment();
 
 	jumpTime += 0.25;
-}
-void updateHorizontalPosition(int key, float forwardSpeed) {
-    float baseMoveSpeed = 0.5; // Base speed for horizontal movement
-    float speedFactor = forwardSpeed / initialSpeed; // Adjust based on your speed scale
-    float moveSpeed = baseMoveSpeed * speedFactor;
-
-    if (key == GLFW_KEY_A) {
-        bunnyPosX -= moveSpeed; // Move left
-    } else if (key == GLFW_KEY_D) {
-        bunnyPosX += moveSpeed; // Move right
-    }
 }
 
 void reshape(GLFWwindow* window, int w, int h)
@@ -562,10 +570,10 @@ void resetGame() {
 
 void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (action == GLFW_PRESS) {
-        if (key == GLFW_KEY_A || key == GLFW_KEY_D) {
-            updateHorizontalPosition(key, forwardSpeed);
-        }
+	if (key == GLFW_KEY_A) {
+        isMovingLeft = (action != GLFW_RELEASE);
+    } else if (key == GLFW_KEY_D) {
+        isMovingRight = (action != GLFW_RELEASE);
     }
 	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
 	{
