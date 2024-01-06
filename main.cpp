@@ -610,9 +610,6 @@ void initVBO(Model& model)
 }
 
 
-
-
-
 void init(){
 	ParseObj("bunny.obj", gBunnyModel);
 	ParseObj("quad.obj", gQuadModel);
@@ -655,15 +652,6 @@ float bunnyPosZ = 0.0f;
 float initialSpeed = 1.0f;
 float forwardSpeed= 1.0f;
 
-// Global position variables for the quad
-float quadPosX = 0.0f; // X position
-float quadPosY = 0.0f; // Y position (ground level)
-float quadPosZ = -5.0f; // Z position
-
-float quadScaleX = 0.25; // Scale in X
-float quadScaleY = 0.25; // Scale in Y, small value to make it flat
-float quadScaleZ = 0.25; // Scale in Z
-
 
 float computeHopHeight(float forwardSpeed, float time) {
 	float startHeight = -1.0f; // Starting height of the hop
@@ -685,9 +673,11 @@ void updateHorizontalPosition(int key, float forwardSpeed) {
         bunnyPosX += moveSpeed; // Move right
     }
 }
+
+// Function to compute the BUNNY's model matrix
 glm::mat4 computeBunnyModelMatrix() {
 
-	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(quadScaleX, quadScaleY, quadScaleZ));
+	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.25, 0.25, 0.25));
 
 	// Rotate the model 90 degrees clockwise around the Y-axis
 	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
@@ -703,22 +693,32 @@ glm::mat4 computeBunnyModelMatrix() {
 	return matT * matRz * matR *matS;
 }
 
+// Set the position where you want the start of the path
+float quadPosX = 0.0f; // Centered on X
+float quadPosY = 0.0f; // At ground level
+float quadPosZ = -10.0f; // Adjust as needed
+
+// Scale the path to be long and wide but flat
+float quadScaleX = 10.25f; // Length of the path
+float quadScaleY = 1000.25f; // Very thin to make it look like a path
+float quadScaleZ = -5.25f;  // Width of the path
+
+
 glm::mat4 computeQuadModelMatrix() {
-    // Apply translation, rotation, and scaling specific to the quad
+    // Start with an identity matrix
+    glm::mat4 model = glm::mat4(1.0);
 
-	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.25, 0.25, 0.25));
+    // Scale the quad to make it long and flat
+    glm::mat4 matS = glm::scale(model, glm::vec3(quadScaleX, quadScaleY, quadScaleZ));
 
-	// Rotate the model 90 degrees clockwise around the Y-axis
-	glm::mat4 matRy = glm::rotate(glm::mat4(1.0), glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    // Rotate the model around the X-axis to lay it flat on the ground
+    glm::mat4 matRx = glm::rotate(model, glm::radians(-50.0f), glm::vec3(1.0, 0.0, 0.0));
 
-	// rotate the model 90 degrees clockwise around the X-axis
-	glm::mat4 matRx = glm::rotate(glm::mat4(1.0), glm::radians(-60.0f), glm::vec3(1.0, 0.0, 0.0));
-
-	// Translate the model
-	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(quadPosX, quadPosY, quadPosZ));
+    // Translate the model to its position
+    glm::mat4 matT = glm::translate(model, glm::vec3(quadPosX, quadPosY, quadPosZ));
     
-    
-    return matT *matRx *matRy * matS;
+    // Combine the transformations, noting the order of operations: first scale, then rotate, then translate
+    return matT * matRx * matS;
 }
 
 void display()
