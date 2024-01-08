@@ -500,8 +500,7 @@ glm::mat4 computeBunnyModelMatrix() {
 	
 
     return matT * matS * matR * matRz;
-	// return matS * matR * matRz * matT;
-	// return matT * matR * matRz * matS;
+	
 }
 
 float baseCubePosZ = -30.0f;
@@ -536,6 +535,8 @@ glm::mat4 computeCube3ModelMatrix(){
 
 	return matT * matS * matR;
 }
+
+bool kill = false;
 
 
 // Set the position where you want the start of the path
@@ -670,6 +671,19 @@ void display()
 	if(initalCubePos1Z  >  bunnyPosZ + EPSILON){
 		initalCubePos1Z = baseCubePosZ;
 	}
+	// bunny hits to the cube
+	if(bunnyPosX > initalCubePos1X - 0.5f && bunnyPosX < initalCubePos1X + 0.5f && bunnyPosZ > initalCubePos1Z - 1.0f && bunnyPosZ < initalCubePos1Z + 1.0f){
+		if(whichCube0==0)
+		{
+			// do rotation
+
+		}
+		else{
+			// die and reset
+			kill = true;
+		}
+	}
+
 	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
 
@@ -696,6 +710,20 @@ void display()
 		initalCubePos2Z = baseCubePosZ;
 	}
 
+	// bunny hits to the cube
+	if(bunnyPosX > initalCubePos2X - 0.5f && bunnyPosX < initalCubePos2X + 0.5f && bunnyPosZ > initalCubePos2Z - 1.0f && bunnyPosZ < initalCubePos2Z + 1.0f){
+		if(whichCube2==0)
+		{
+			// do rotation
+
+		}
+		else{
+			// die and reset
+			kill = true;
+		}
+	}
+	
+
 	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
     
@@ -719,6 +747,19 @@ void display()
 	initalCubePos3Z += 0.1f;
 	if(initalCubePos3Z  >  bunnyPosZ + EPSILON){
 		initalCubePos3Z = baseCubePosZ;
+	}
+
+	// bunny hits to the cube
+	if(bunnyPosX > initalCubePos3X - 0.5f && bunnyPosX < initalCubePos3X + 0.5f && bunnyPosZ > initalCubePos3Z - 1.0f && bunnyPosZ < initalCubePos3Z + 1.0f){
+		if(whichCube2==0)
+		{
+			// do rotation
+
+		}
+		else{
+			// die and reset
+			kill = true;
+		}
 	}
 
 	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
@@ -842,9 +883,14 @@ void mainLoop(GLFWwindow* window)
 {
 	while (!glfwWindowShouldClose(window))
 	{
-		display();
+		if(!kill)
+		{
+			display();
+			
+		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		
 	}
 }
 
