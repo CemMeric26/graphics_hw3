@@ -869,6 +869,36 @@ void resetGame() {
     // Reset any other game state variables as needed
     // For example, resetting the bunny's position
     bunnyPosX = 0.0f;
+	bunnyPosY = 0.0f;
+	bunnyPosZ = -2.0f;
+	kill = false;
+
+	initalCubePos1X = 0.0f; initalCubePos1Y = -1.0f; initalCubePos1Z = baseCubePosZ;
+	initalCubePos2X = -3.0f; initalCubePos2Y = -1.0f; initalCubePos2Z = baseCubePosZ;
+	initalCubePos3X = 3.0f; initalCubePos3Y = -1.0f; initalCubePos3Z = baseCubePosZ;
+
+	draw1 = true;
+	draw2 = true;
+	draw3 = true;
+
+	whichCube0  = 0;
+	whichCube1  = 1;
+	whichCube2  = 2;
+	check = 0;
+
+	quadPosX = 0.0f; // Centered on X
+	quadPosY = -1.5f; // At ground level
+	quadPosZ = -8.0f; // Adjust as needed
+
+	quadScaleX = 3.5f; // Width of the path
+	quadScaleY = 1000.0f; // make it look path
+	quadScaleZ = 80.0f; // Length of the path
+
+	offsetValue = 50.0f;
+	offsetZ = 50.0f;
+	scaleValue = 0.5f;
+	
+
 }
 
 void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
