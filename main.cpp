@@ -18,6 +18,8 @@
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
+#define EPSILON 0.000001
+
 using namespace std;
 
 GLuint gProgram[3];
@@ -485,8 +487,7 @@ void updateHorizontalPosition(int key, float forwardSpeed) {
 // Function to compute the BUNNY's model matrix
 glm::mat4 computeBunnyModelMatrix() {
 
-	// bunnyPosZ -= 0.1f;
-	// bunnyPosY += 0.1f;
+
 	// Translate the model
 	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(bunnyPosX, bunnyPosY, bunnyPosZ));
 
@@ -498,20 +499,20 @@ glm::mat4 computeBunnyModelMatrix() {
 	glm::mat4 matRz = glm::rotate(glm::mat4(1.0), glm::radians(+10.0f), glm::vec3(1.0, 0.0, 0.0));
 	
 
-	// move bunny forward
-	// bunnyPosZ -= 0.0000001f;
-
-    // modelingMatrix = matT * matRz * matR *matS;
-
     return matT * matS * matR * matRz;
 	// return matS * matR * matRz * matT;
 	// return matT * matR * matRz * matS;
 }
 
+float baseCubePosZ = -30.0f;
+
+float initalCubePos1X = 0.0f; float initalCubePos1Y = -1.0f; float initalCubePos1Z = baseCubePosZ;
+float initalCubePos2X = -3.0f; float initalCubePos2Y = -1.0f; float initalCubePos2Z = baseCubePosZ;
+float initalCubePos3X = 3.0f; float initalCubePos3Y = -1.0f; float initalCubePos3Z = baseCubePosZ;
 
 glm::mat4 computeCube1ModelMatrix(){
-
-	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(0.0, -1.0, -10.0));
+	
+	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(initalCubePos1X, initalCubePos1Y, initalCubePos1Z));
 	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
 	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 
@@ -520,7 +521,7 @@ glm::mat4 computeCube1ModelMatrix(){
 
 glm::mat4 computeCube2ModelMatrix(){
 
-	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(-3.0, -1.0, -10.0));
+	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(initalCubePos2X, initalCubePos2Y, initalCubePos2Z));
 	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
 	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 
@@ -529,7 +530,7 @@ glm::mat4 computeCube2ModelMatrix(){
 
 glm::mat4 computeCube3ModelMatrix(){
 
-	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(3.0, -1.0, -10.0));
+	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(initalCubePos3X, initalCubePos3Y, initalCubePos3Z));
 	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
 	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 
@@ -549,17 +550,10 @@ float quadScaleY = 1000.0f; // make it look path
 float quadScaleZ = 80.0f; // Length of the path
 
 glm::mat4 computeQuadModelMatrix() {
-    // Start with an identity matrix
-    // glm::mat4 model = glm::mat4(1.0);
 
-	// float increment = 0.1f;
-
-	// quadPosZ -= 0.5f;
 
 	// Translate the model to its position
     glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(quadPosX, quadPosY, quadPosZ));
-	// glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(quadPosX, quadPosY, bunnyPosZ));
-
 
     // Scale the quad to make it long and flat
     glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(quadScaleX, quadScaleY, quadScaleZ));
@@ -633,6 +627,12 @@ void display()
 	
 	//put the cube
 	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
+
+	initalCubePos1Z += 0.1f;
+
+	if(initalCubePos1Z  >  bunnyPosZ + EPSILON){
+		initalCubePos1Z = baseCubePosZ;
+	}
 	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
 
@@ -648,6 +648,12 @@ void display()
 	
 	//put the cube
 	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
+
+	initalCubePos2Z += 0.1f;
+	if(initalCubePos2Z  >  bunnyPosZ + EPSILON){
+		initalCubePos2Z = baseCubePosZ;
+	}
+
 	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
     
@@ -662,6 +668,12 @@ void display()
 	//put the cube
 	
 	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
+
+	initalCubePos3Z += 0.1f;
+	if(initalCubePos3Z  >  bunnyPosZ + EPSILON){
+		initalCubePos3Z = baseCubePosZ;
+	}
+
 	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
 	glm::mat4 cubeModelMatrix3 = computeCube3ModelMatrix(); // Function to compute bunny's model matrix
