@@ -93,6 +93,8 @@ int gVertexDataSizeInBytes, gNormalDataSizeInBytes;
 
 Model gBunnyModel, gQuadModel;
 
+vector<Model> gModels;
+
 bool isMovingLeft = false;
 bool isMovingRight = false;
 
@@ -408,6 +410,9 @@ void init(){
 	initShaders();
 	initVBO(gBunnyModel);
 	initVBO(gQuadModel);
+	gModels.push_back(gQuadModel);
+	gModels.push_back(gBunnyModel);
+
 	// initVBO(gCubeModel);
 }
 
@@ -475,12 +480,12 @@ glm::mat4 computeBunnyModelMatrix() {
 // Set the position where you want the start of the path
 float quadPosX = 0.0f; // Centered on X
 float quadPosY = 0.0f; // At ground level
-float quadPosZ = -10.0f; // Adjust as needed
+float quadPosZ = -5.0f; // Adjust as needed
 
 // Scale the path to be long and wide but flat
-float quadScaleX = 10.25f; // Length of the path
-float quadScaleY = 1000.25f; // Very thin to make it look like a path
-float quadScaleZ = -5.25f;  // Width of the path
+float quadScaleX = 5.25f; // Length of the path
+float quadScaleY = 100.25f; // Very thin to make it look like a path
+float quadScaleZ = +5.25f;  // Width of the path
 
 
 glm::mat4 computeQuadModelMatrix() {
@@ -491,7 +496,7 @@ glm::mat4 computeQuadModelMatrix() {
     glm::mat4 matS = glm::scale(model, glm::vec3(quadScaleX, quadScaleY, quadScaleZ));
 
     // Rotate the model around the X-axis to lay it flat on the ground
-    glm::mat4 matRx = glm::rotate(model, glm::radians(-50.0f), glm::vec3(1.0, 0.0, 0.0));
+    glm::mat4 matRx = glm::rotate(model, glm::radians(-60.0f), glm::vec3(1.0, 0.0, 0.0));
 
     // Translate the model to its position
     glm::mat4 matT = glm::translate(model, glm::vec3(quadPosX, quadPosY, quadPosZ));
@@ -528,32 +533,43 @@ void display()
     }
 	
 
-	// Set the active program and the values of its uniform variables
-	glUseProgram(gProgram[activeProgramIndex]);
+	// Quad Transformations
+	glUseProgram(gProgram[1]);
+	// Assuming gProgram[1] is your shader program
+	GLuint offsetLoc = glGetUniformLocation(gProgram[1], "offset");
+	GLuint scaleLoc = glGetUniformLocation(gProgram[1], "scale");
 
-	// Set common uniforms like projection and viewing matrices
-	glUniformMatrix4fv(projectionMatrixLoc[activeProgramIndex], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniformMatrix4fv(viewingMatrixLoc[activeProgramIndex], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
-	// glUniformMatrix4fv(modelingMatrixLoc[activeProgramIndex], 1, GL_FALSE, glm::value_ptr(modelingMatrix));
-	glUniform3fv(eyePosLoc[activeProgramIndex], 1, glm::value_ptr(eyePos));
+	// Set your desired values for offset and scale
+	float offsetValue = 10.0f; 
+	float scaleValue = 100.0f;
+
+	// set the values
+	glUniform1f(offsetLoc, offsetValue);
+	glUniform1f(scaleLoc, scaleValue);
 
 
 	// Quad Transformations
-	glUseProgram(gProgram[0]);
+	glUseProgram(gProgram[1]);
+
     glm::mat4 quadModelMatrix = computeQuadModelMatrix(); // Function to compute quad's model matrix
-    glUniformMatrix4fv(modelingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(quadModelMatrix));
+	glUniformMatrix4fv(projectionMatrixLoc[1], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(viewingMatrixLoc[1], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
+    glUniformMatrix4fv(modelingMatrixLoc[1], 1, GL_FALSE, glm::value_ptr(quadModelMatrix));
+	glUniform3fv(eyePosLoc[1], 1, glm::value_ptr(eyePos));
+
     drawModel(gQuadModel);
+
+
 
 	// Bunny Transformations
 	glUseProgram(gProgram[0]); // Replace with actual program index for bunny
+	glUniformMatrix4fv(projectionMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(viewingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
     glm::mat4 bunnyModelMatrix = computeBunnyModelMatrix(); // Function to compute bunny's model matrix
-    glUniformMatrix4fv(modelingMatrixLoc[activeProgramIndex], 1, GL_FALSE, glm::value_ptr(bunnyModelMatrix));
+    glUniformMatrix4fv(modelingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(bunnyModelMatrix));
+	glUniform3fv(eyePosLoc[0], 1, glm::value_ptr(eyePos));
     drawModel(gBunnyModel);
 
-	// Draw the scene
-	// drawModel(gBunnyModel);
-	// drawModel(gQuadModel);
-	// drawModel(gCubeModel);
 
 
 	jumpTime += 0.25;

@@ -1,14 +1,15 @@
 #version 330 core
-layout (location = 0) in vec3 aPos;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+layout(location = 0) in vec3 aPos; // Vertex position
 
-out vec2 TexCoord;
+// Matrices for transformations
+uniform mat4 modelingMatrix;
+uniform mat4 viewingMatrix;
+uniform mat4 projectionMatrix;
+uniform vec3 eyePos;
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
-    TexCoord = aPos.xz; // Using the x and z vertex positions as texture coordinates
+    // Transform vertex position into clip space
+    gl_Position = projectionMatrix * viewingMatrix * modelingMatrix * vec4(aPos, 1.0);
 }
