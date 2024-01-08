@@ -91,7 +91,7 @@ GLint gInVertexLoc, gInNormalLoc;
 int gVertexDataSizeInBytes, gNormalDataSizeInBytes;
 
 
-Model gBunnyModel, gQuadModel;
+Model gBunnyModel, gQuadModel, gCubeModel;
 
 vector<Model> gModels;
 
@@ -404,12 +404,13 @@ void initVBO(Model& model)
 void init(){
 	ParseObj("bunny.obj", gBunnyModel);
 	ParseObj("quad.obj", gQuadModel);
-	// ParseObj("cube.obj", gCubeModel);
+	ParseObj("cube.obj", gCubeModel);
 
 	glEnable(GL_DEPTH_TEST);
 	initShaders();
 	initVBO(gBunnyModel);
 	initVBO(gQuadModel);
+	initVBO(gCubeModel);
 	// gModels.push_back(gQuadModel);
 	// gModels.push_back(gBunnyModel);
 
@@ -431,13 +432,12 @@ void drawModel(const Model& model)
 
 
 
-
 // Global variable to keep track of the bunny's X position
 float bunnyPosX = 0.0f;
 float bunnyPosY = 0.0f;
 float bunnyPosZ = -2.0f;
 float initialSpeed = 1.0f;
-float forwardSpeed= 1.0f;
+float forwardSpeed= 0.5f;
 
 
 float computeHopHeight(float forwardSpeed, float time) {
@@ -478,7 +478,7 @@ glm::mat4 computeBunnyModelMatrix() {
 	
 
 	// move bunny forward
-	// bunnyPosZ -= 1.0f;
+	bunnyPosZ -= 0.0000001f;
 
     // modelingMatrix = matT * matRz * matR *matS;
 
@@ -488,9 +488,17 @@ glm::mat4 computeBunnyModelMatrix() {
 }
 
 
+glm::mat4 computeCubeModelMatrix(){
+	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(0.0, -1.0, -2.0));
+	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.25, 0.25, 0.25));
+	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+
+	return matT * matS * matR;
+}
+
 // Set the position where you want the start of the path
 float quadPosX = 0.0f; // Centered on X
-float quadPosY = 0.0f; // At ground level
+float quadPosY = -1.5f; // At ground level
 float quadPosZ = -8.0f; // Adjust as needed
 float quadPosZ_2 = -8.0f;
 
@@ -505,7 +513,8 @@ glm::mat4 computeQuadModelMatrix() {
 
 	// float increment = 0.1f;
 
-	// quadPosZ -= 0.1f;
+	// quadPosZ -= 0.5f;
+
 	// Translate the model to its position
     glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(quadPosX, quadPosY, quadPosZ));
 	// glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(quadPosX, quadPosY, bunnyPosZ));
@@ -515,7 +524,7 @@ glm::mat4 computeQuadModelMatrix() {
     glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(quadScaleX, quadScaleY, quadScaleZ));
 
     // Rotate the model around the X-axis to lay it flat on the ground
-    glm::mat4 matRx = glm::rotate(glm::mat4(1.0), glm::radians(91.0f), glm::vec3(1.0, 0.0, 0.0));
+    glm::mat4 matRx = glm::rotate(glm::mat4(1.0), glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
 
     
     // Combine the transformations, noting the order of operations: first scale, then rotate, then translate
@@ -527,6 +536,7 @@ float movePosZ = 0.0f;
 
 // Set your desired values for offset and scale
 float offsetValue = 50.0f; 
+float offsetZ = 50.0f;
 float scaleValue = 0.5f;
 
 void display()
@@ -546,17 +556,24 @@ void display()
 	bunnyPosY = computeHopHeight(forwardSpeed, jumpTime);
 	if (isMovingLeft) {
         // Logic to move left
-        bunnyPosX -= forwardSpeed;  // Adjust this line according to your position update logic
+		if (bunnyPosX > -2.75f) {
+			bunnyPosX -= forwardSpeed;  // Adjust this line according to your position update logic
+		}
+
+        // bunnyPosX -= forwardSpeed;  // Adjust this line according to your position update logic
     }
     if (isMovingRight) {
-        // Logic to move right
-        bunnyPosX += forwardSpeed;  // Adjust this line according to your position update logic
+		if (bunnyPosX < 2.90f) {
+			// Logic to move right
+        	bunnyPosX += forwardSpeed;  // Adjust this line according to your position update logic
+       	
+		}
     }
+	 // Update the offset for the path animation
+    offsetZ -= 0.1f;  // Adjust this value for speed of animation
 
-	// Bunny Transformat,ions
-	// glBindVertexArray(0);
-	// glBindVertexArray(gBunnyModel.vbo);
 
+	// put bunny
 	glUseProgram(gProgram[0]); // Replace with actual program index for bunny
 	glUniformMatrix4fv(projectionMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
@@ -569,16 +586,30 @@ void display()
 	glUniform3fv(eyePosLoc[0], 1, glm::value_ptr(eyePos));
     drawModel(gBunnyModel);
 	
+	//put the cube
+	glUseProgram(gProgram[0]); // Replace with actual program index for bunny
+	glUniformMatrix4fv(projectionMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(viewingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
+    glm::mat4 cubeModelMatrix = computeCubeModelMatrix(); // Function to compute bunny's model matrix
+
+    glUniformMatrix4fv(modelingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix));
+
+	glUniform3fv(eyePosLoc[0], 1, glm::value_ptr(eyePos));
+    drawModel(gCubeModel);
+
+
 
 	// Quad Transformations
 	glUseProgram(gProgram[1]);
 	// Assuming gProgram[1] is your shader program
 	GLuint offsetLoc = glGetUniformLocation(gProgram[1], "offset");
+	GLuint offsetZLoc = glGetUniformLocation(gProgram[1], "offsetZ");
 	GLuint scaleLoc = glGetUniformLocation(gProgram[1], "scale");
 
 	
 	// set the values
 	glUniform1f(offsetLoc, offsetValue);
+	glUniform1f(offsetZLoc, offsetZ);
 	glUniform1f(scaleLoc, scaleValue);
 
 
@@ -590,9 +621,10 @@ void display()
 	std::cout << "quadPosY = " << quadPosY << std::endl;
 	
 	glUniform3fv(eyePosLoc[1], 1, glm::value_ptr(eyePos));
-
 	
     drawModel(gQuadModel);
+
+
 
 
 	jumpTime += 0.25;
@@ -617,9 +649,13 @@ void reshape(GLFWwindow* window, int w, int h)
 	// at +y direction)
 	// 
 	//viewingMatrix = glm::mat4(1)
-	
-	viewingMatrix = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0) + glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
+	// Use orthographic projection
+	
+
+	viewingMatrix = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0) + glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)) ;
+	
+	
 
 }
 void resetGame() {

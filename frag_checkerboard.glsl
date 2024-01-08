@@ -4,6 +4,7 @@ out vec4 FragColor;
 in vec4 fragWorldPos;
 
 uniform float offset; // offset for the checkerboard
+uniform float offsetZ;
 uniform float scale; // scale for the checkerboard
 
 void main()
@@ -13,7 +14,7 @@ void main()
 
     bool x = (int ((pos.x + offset) * scale)) %2 != 0;
     bool y = (int ((pos.y + offset ) * scale)) % 2 != 0;
-    bool z = (int ((pos.z + offset) * scale)) % 2 != 0;
+    bool z = (int ((pos.z + offsetZ) * scale)) % 2 != 0;
     
     bool xorXY = x != y;
     
