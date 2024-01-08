@@ -576,7 +576,7 @@ float movePosZ = 0.0f;
 float offsetValue = 50.0f; 
 float offsetZ = 50.0f;
 float scaleValue = 0.5f;
-
+float inc = 0.1f;
 
 int whichCube0  = 0;
 int whichCube1  = 1;
@@ -615,13 +615,14 @@ void display()
 		}
     }
 	 // Update the offset for the path animation
-    offsetZ -= 0.1f;  // Adjust this value for speed of animation
+	inc+=0.0001f;
+    offsetZ -= inc;  // Adjust this value for speed of animation
 
 
 	glm::mat4 rotateBunny= glm::mat4(1.0);
 
 //--------------------------------------------------------------------------
-	initalCubePos1Z += 0.1f;
+	initalCubePos1Z += inc;
 	// which checkpoint will be the yellow
 	if(initalCubePos1Z  >  bunnyPosZ + EPSILON){
 		
@@ -703,7 +704,7 @@ void display()
 
 	glUniform1i(whichCubeLoc1, whichCube1);
 
-	initalCubePos2Z += 0.1f;
+	initalCubePos2Z += inc;
 	if(initalCubePos2Z  >  bunnyPosZ + EPSILON){
 		initalCubePos2Z = baseCubePosZ;
 	}
@@ -750,7 +751,7 @@ void display()
 
 	glUniform1i(whichCubeLoc2, whichCube2);
 
-	initalCubePos3Z += 0.1f;
+	initalCubePos3Z += inc;
 	if(initalCubePos3Z  >  bunnyPosZ + EPSILON){
 		initalCubePos3Z = baseCubePosZ;
 	}
@@ -857,7 +858,7 @@ void reshape(GLFWwindow* window, int w, int h)
 	// Use orthographic projection
 	
 
-	viewingMatrix = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0) + glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)) ;
+	viewingMatrix = glm::lookAt(glm::vec3(0, 0.6, 0), glm::vec3(0, 0, 0) + glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)) ;
 	
 	
 
