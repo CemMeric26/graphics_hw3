@@ -35,10 +35,10 @@ void main(void)
 	vec3 H = normalize(L + V);
 	vec3 N = normalize(fragWorldNor);
 
-    if( whichCube != 0 ){
+    if( whichCube == 1 ||  whichCube == 2){
         kd = vec3(1.0,0.0,0.0) ; // red color
     }
-    else{
+    else if(whichCube==0){
         
         kd = vec3(0.8, 0.7, 0.0); // yellow color
     }

@@ -583,6 +583,7 @@ int whichCube1  = 1;
 int whichCube2  = 2;
 int check = 0;
 
+int token = 0;
 
 void display()
 {
@@ -620,8 +621,10 @@ void display()
 
 
 	glm::mat4 rotateBunny= glm::mat4(1.0);
+	glm::mat4 yellowRotate= glm::mat4(1.0);
 
 //--------------------------------------------------------------------------
+	
 	initalCubePos1Z += inc;
 	// which checkpoint will be the yellow
 	if(initalCubePos1Z  >  bunnyPosZ + EPSILON){
@@ -652,7 +655,7 @@ void display()
 
 	GLuint whichCubeLoc0 = glGetUniformLocation(gProgram[2], "whichCube");
 
-	std::cout << "whichCube0 = " << whichCube0 << std::endl;
+	
 
 	glUniform1i(whichCubeLoc0, whichCube0);
 
@@ -666,7 +669,7 @@ void display()
 		if(whichCube0==0)
 		{
 			// do rotation
-
+			token = 18;
 		}
 		else{
 			// die and reset
@@ -700,7 +703,7 @@ void display()
 	glUseProgram(gProgram[2]); // Replace with actual program index for cube
 
 	GLuint whichCubeLoc1 = glGetUniformLocation(gProgram[2], "whichCube");
-	std::cout << "whichCube1 = " << whichCube1 << std::endl;
+	
 
 	glUniform1i(whichCubeLoc1, whichCube1);
 
@@ -710,15 +713,20 @@ void display()
 	}
 
 	// bunny hits to the cube
-	if(bunnyPosX > initalCubePos2X - 0.7f && bunnyPosX < initalCubePos2X + 0.7f && bunnyPosZ > initalCubePos2Z - 1.0f && bunnyPosZ < initalCubePos2Z + 1.0f){
-		if(whichCube2==0)
+	if(bunnyPosX > initalCubePos2X - 0.7f && bunnyPosX < initalCubePos2X + 0.7f && bunnyPosZ > initalCubePos2Z - 1.0f && bunnyPosZ < initalCubePos2Z + 1.0f)
+	{
+		
+		if(whichCube1==0)
 		{
 			// do rotation
+			token=18;
+
 
 		}
-		else{
+		else if(whichCube1!=0){
 			// die and reset
 			kill = true;
+			
 			// rotation around z axis for 90 degree for bunny
 			glm::mat4 matRz = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 			rotateBunny	= matRz;
@@ -747,7 +755,7 @@ void display()
 	glUseProgram(gProgram[2]); // Replace with actual program index for cube
 	GLuint whichCubeLoc2 = glGetUniformLocation(gProgram[2], "whichCube");
 
-	std::cout << "whichCube2 = " << whichCube2 << std::endl;
+
 
 	glUniform1i(whichCubeLoc2, whichCube2);
 
@@ -761,10 +769,11 @@ void display()
 		if(whichCube2==0)
 		{
 			// do rotation
-
+			token=18;
 		}
 		else{
 			// die and reset
+			
 			kill = true;
 			// rotation around z axis for 90 degree for bunny
 			glm::mat4 matRz = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
@@ -813,16 +822,26 @@ void display()
 
 // -----------------------------------------------------------------
 // --------------------------------------------------------------------
-
-	// put bunny
+// put bunny
 	glUseProgram(gProgram[0]); // Replace with actual program index for bunny
 	glUniformMatrix4fv(projectionMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
     glm::mat4 bunnyModelMatrix = computeBunnyModelMatrix(); // Function to compute bunny's model matrix
 
+	if(token > 0){
+		// rotation around z axis for 90 degree for bunny
+		glm::mat4 matRz = glm::rotate(glm::mat4(1.0), glm::radians((18-token)*(-20.0f)), glm::vec3(0.0, 1.0, 0.0));
+		yellowRotate	= matRz;
+		token-=1;
+		bunnyModelMatrix = bunnyModelMatrix * yellowRotate;
+	}
+	
+
 	if(kill){
+		std::cout << "bunny x pos = " << bunnyPosX << std::endl;
 		bunnyModelMatrix = bunnyModelMatrix * rotateBunny;
 	}
+
     glUniformMatrix4fv(modelingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(bunnyModelMatrix));
 	// std::cout << "bunnyPos y = " << bunnyPosY << std::endl;
 	// std::cout << "bunnyPos Z = " << bunnyPosZ << std::endl;
@@ -833,6 +852,7 @@ void display()
 	
 
 	jumpTime += 0.25;
+	
 }
 
 void reshape(GLFWwindow* window, int w, int h)
@@ -898,6 +918,8 @@ void resetGame() {
 	offsetValue = 50.0f;
 	offsetZ = 50.0f;
 	scaleValue = 0.5f;
+	
+	inc = 0.1f;
 	
 
 }
