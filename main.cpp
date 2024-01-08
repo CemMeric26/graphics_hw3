@@ -477,16 +477,16 @@ glm::mat4 computeBunnyModelMatrix() {
 	return matT * matRz * matR *matS;
 }
 
+
 // Set the position where you want the start of the path
 float quadPosX = 0.0f; // Centered on X
 float quadPosY = 0.0f; // At ground level
-float quadPosZ = -5.0f; // Adjust as needed
+float quadPosZ = -4.25f; // Adjust as needed
 
 // Scale the path to be long and wide but flat
-float quadScaleX = 5.25f; // Length of the path
-float quadScaleY = 100.25f; // Very thin to make it look like a path
-float quadScaleZ = +5.25f;  // Width of the path
-
+float quadScaleX = 5.25f; // Width of the path
+float quadScaleY = 100.0f; // make it look path
+float quadScaleZ = 5.25f; // Length of the path
 
 glm::mat4 computeQuadModelMatrix() {
     // Start with an identity matrix
@@ -504,6 +504,8 @@ glm::mat4 computeQuadModelMatrix() {
     // Combine the transformations, noting the order of operations: first scale, then rotate, then translate
     return matT * matRx * matS;
 }
+
+
 
 void display()
 {
@@ -532,7 +534,6 @@ void display()
         bunnyPosX += forwardSpeed;  // Adjust this line according to your position update logic
     }
 	
-
 	// Quad Transformations
 	glUseProgram(gProgram[1]);
 	// Assuming gProgram[1] is your shader program
@@ -540,8 +541,8 @@ void display()
 	GLuint scaleLoc = glGetUniformLocation(gProgram[1], "scale");
 
 	// Set your desired values for offset and scale
-	float offsetValue = 10.0f; 
-	float scaleValue = 100.0f;
+	float offsetValue = 50.0f; 
+	float scaleValue = 0.5f;
 
 	// set the values
 	glUniform1f(offsetLoc, offsetValue);
@@ -558,7 +559,6 @@ void display()
 	glUniform3fv(eyePosLoc[1], 1, glm::value_ptr(eyePos));
 
     drawModel(gQuadModel);
-
 
 
 	// Bunny Transformations
