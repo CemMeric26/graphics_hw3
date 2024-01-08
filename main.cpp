@@ -574,6 +574,13 @@ float offsetValue = 50.0f;
 float offsetZ = 50.0f;
 float scaleValue = 0.5f;
 
+
+int whichCube0  = 0;
+int whichCube1  = 1;
+int whichCube2  = 2;
+int check = 0;
+
+
 void display()
 {
 	glClearColor(0, 0, 0, 1);
@@ -621,14 +628,44 @@ void display()
 	// std::cout << "bunnyPos Z = " << bunnyPosZ << std::endl;
 	glUniform3fv(eyePosLoc[0], 1, glm::value_ptr(eyePos));
     drawModel(gBunnyModel);
-	
+
 
 //--------------------------------------------------------------------------
-	
-	//put the cube
-	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
-
 	initalCubePos1Z += 0.1f;
+	// which checkpoint will be the yellow
+	if(initalCubePos1Z  >  bunnyPosZ + EPSILON){
+		
+		check = std::rand() % 3;
+		if(check == 0){
+			whichCube0  = 0;
+			whichCube1  = 1;
+			whichCube2  = 2;
+
+		}
+		else if(check == 1){
+			whichCube1  = 0;
+			whichCube0  = 1;
+			whichCube2  = 2;
+
+		}
+		else if(check == 2){
+			whichCube2  = 0;
+			whichCube1  = 1;
+			whichCube0  = 2;
+
+		}
+	}
+
+	//put the cube
+	glUseProgram(gProgram[2]); // Replace with actual program index for cube
+
+	GLuint whichCubeLoc0 = glGetUniformLocation(gProgram[2], "whichCube");
+
+	std::cout << "whichCube0 = " << whichCube0 << std::endl;
+
+	glUniform1i(whichCubeLoc0, whichCube0);
+
+	
 
 	if(initalCubePos1Z  >  bunnyPosZ + EPSILON){
 		initalCubePos1Z = baseCubePosZ;
@@ -647,7 +684,12 @@ void display()
 	//put the cube2
 	
 	//put the cube
-	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
+	glUseProgram(gProgram[2]); // Replace with actual program index for cube
+
+	GLuint whichCubeLoc1 = glGetUniformLocation(gProgram[2], "whichCube");
+	std::cout << "whichCube1 = " << whichCube1 << std::endl;
+
+	glUniform1i(whichCubeLoc1, whichCube1);
 
 	initalCubePos2Z += 0.1f;
 	if(initalCubePos2Z  >  bunnyPosZ + EPSILON){
@@ -657,7 +699,7 @@ void display()
 	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
     
-	glm::mat4 cubeModelMatrix2 = computeCube2ModelMatrix(); // Function to compute bunny's model matrix
+	glm::mat4 cubeModelMatrix2 = computeCube2ModelMatrix(); // Function to compute cube's model matrix
     glUniformMatrix4fv(modelingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix2));
 
 	glUniform3fv(eyePosLoc[2], 1, glm::value_ptr(eyePos));
@@ -667,7 +709,12 @@ void display()
 	//put the cube3
 	//put the cube
 	
-	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
+	glUseProgram(gProgram[2]); // Replace with actual program index for cube
+	GLuint whichCubeLoc2 = glGetUniformLocation(gProgram[2], "whichCube");
+
+	std::cout << "whichCube2 = " << whichCube2 << std::endl;
+
+	glUniform1i(whichCubeLoc2, whichCube2);
 
 	initalCubePos3Z += 0.1f;
 	if(initalCubePos3Z  >  bunnyPosZ + EPSILON){
@@ -676,7 +723,7 @@ void display()
 
 	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
-	glm::mat4 cubeModelMatrix3 = computeCube3ModelMatrix(); // Function to compute bunny's model matrix
+	glm::mat4 cubeModelMatrix3 = computeCube3ModelMatrix(); // Function to compute cube's model matrix
 
 	glUniformMatrix4fv(modelingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix3));
 
