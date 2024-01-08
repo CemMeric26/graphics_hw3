@@ -512,7 +512,7 @@ float initalCubePos3X = 3.0f; float initalCubePos3Y = -1.0f; float initalCubePos
 glm::mat4 computeCube1ModelMatrix(){
 	
 	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(initalCubePos1X, initalCubePos1Y, initalCubePos1Z));
-	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
+	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.6, 2.0, 1.0));
 	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 
 	return matT * matS * matR;
@@ -521,7 +521,7 @@ glm::mat4 computeCube1ModelMatrix(){
 glm::mat4 computeCube2ModelMatrix(){
 
 	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(initalCubePos2X, initalCubePos2Y, initalCubePos2Z));
-	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
+	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.6, 2.0, 1.0));
 	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 
 	return matT * matS * matR;
@@ -530,14 +530,16 @@ glm::mat4 computeCube2ModelMatrix(){
 glm::mat4 computeCube3ModelMatrix(){
 
 	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(initalCubePos3X, initalCubePos3Y, initalCubePos3Z));
-	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
+	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.6, 2.0, 1.0));
 	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 
 	return matT * matS * matR;
 }
 
 bool kill = false;
-
+bool draw1 = true;
+bool draw2 = true;
+bool draw3 = true;
 
 // Set the position where you want the start of the path
 float quadPosX = 0.0f; // Centered on X
@@ -546,7 +548,7 @@ float quadPosZ = -8.0f; // Adjust as needed
 float quadPosZ_2 = -8.0f;
 
 // Scale the path to be long and wide but flat
-float quadScaleX = 5.0f; // Width of the path
+float quadScaleX = 3.5f; // Width of the path
 float quadScaleY = 1000.0f; // make it look path
 float quadScaleZ = 80.0f; // Length of the path
 
@@ -615,21 +617,8 @@ void display()
 	 // Update the offset for the path animation
     offsetZ -= 0.1f;  // Adjust this value for speed of animation
 
-// --------------------------------------------------------------------
 
-	// put bunny
-	glUseProgram(gProgram[0]); // Replace with actual program index for bunny
-	glUniformMatrix4fv(projectionMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniformMatrix4fv(viewingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
-    glm::mat4 bunnyModelMatrix = computeBunnyModelMatrix(); // Function to compute bunny's model matrix
-
-
-    glUniformMatrix4fv(modelingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(bunnyModelMatrix));
-	// std::cout << "bunnyPos y = " << bunnyPosY << std::endl;
-	// std::cout << "bunnyPos Z = " << bunnyPosZ << std::endl;
-	glUniform3fv(eyePosLoc[0], 1, glm::value_ptr(eyePos));
-    drawModel(gBunnyModel);
-
+	glm::mat4 rotateBunny= glm::mat4(1.0);
 
 //--------------------------------------------------------------------------
 	initalCubePos1Z += 0.1f;
@@ -672,7 +661,7 @@ void display()
 		initalCubePos1Z = baseCubePosZ;
 	}
 	// bunny hits to the cube
-	if(bunnyPosX > initalCubePos1X - 0.5f && bunnyPosX < initalCubePos1X + 0.5f && bunnyPosZ > initalCubePos1Z - 1.0f && bunnyPosZ < initalCubePos1Z + 1.0f){
+	if(bunnyPosX > initalCubePos1X - 0.7f && bunnyPosX < initalCubePos1X + 0.7f && bunnyPosZ > initalCubePos1Z - 1.0f && bunnyPosZ < initalCubePos1Z + 1.0f){
 		if(whichCube0==0)
 		{
 			// do rotation
@@ -681,6 +670,12 @@ void display()
 		else{
 			// die and reset
 			kill = true;
+			// rotation around z axis for 90 degree for bunny
+			glm::mat4 matRz = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+			rotateBunny = matRz;
+			
+			draw1 = false;
+
 		}
 	}
 
@@ -691,7 +686,10 @@ void display()
     glUniformMatrix4fv(modelingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix));
 
 	glUniform3fv(eyePosLoc[2], 1, glm::value_ptr(eyePos));
-    drawModel(gCubeModel);
+	if(draw1){
+		drawModel(gCubeModel);
+	}
+    	
 
 //--------------------------------------------------------------------------
 	
@@ -711,7 +709,7 @@ void display()
 	}
 
 	// bunny hits to the cube
-	if(bunnyPosX > initalCubePos2X - 0.5f && bunnyPosX < initalCubePos2X + 0.5f && bunnyPosZ > initalCubePos2Z - 1.0f && bunnyPosZ < initalCubePos2Z + 1.0f){
+	if(bunnyPosX > initalCubePos2X - 0.7f && bunnyPosX < initalCubePos2X + 0.7f && bunnyPosZ > initalCubePos2Z - 1.0f && bunnyPosZ < initalCubePos2Z + 1.0f){
 		if(whichCube2==0)
 		{
 			// do rotation
@@ -720,6 +718,11 @@ void display()
 		else{
 			// die and reset
 			kill = true;
+			// rotation around z axis for 90 degree for bunny
+			glm::mat4 matRz = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+			rotateBunny	= matRz;
+			
+			draw2 = false;
 		}
 	}
 	
@@ -731,7 +734,10 @@ void display()
     glUniformMatrix4fv(modelingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix2));
 
 	glUniform3fv(eyePosLoc[2], 1, glm::value_ptr(eyePos));
-    drawModel(gCubeModel2);
+	if(draw2){
+		drawModel(gCubeModel2);
+	}
+    
 	
 // --------------------------------------------------------------------------
 	//put the cube3
@@ -750,7 +756,7 @@ void display()
 	}
 
 	// bunny hits to the cube
-	if(bunnyPosX > initalCubePos3X - 0.5f && bunnyPosX < initalCubePos3X + 0.5f && bunnyPosZ > initalCubePos3Z - 1.0f && bunnyPosZ < initalCubePos3Z + 1.0f){
+	if(bunnyPosX > initalCubePos3X - 0.7f && bunnyPosX < initalCubePos3X + 0.7f && bunnyPosZ > initalCubePos3Z - 1.0f && bunnyPosZ < initalCubePos3Z + 1.0f){
 		if(whichCube2==0)
 		{
 			// do rotation
@@ -759,6 +765,11 @@ void display()
 		else{
 			// die and reset
 			kill = true;
+			// rotation around z axis for 90 degree for bunny
+			glm::mat4 matRz = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+			rotateBunny	= matRz;
+			
+			draw3 = false;
 		}
 	}
 
@@ -769,7 +780,10 @@ void display()
 	glUniformMatrix4fv(modelingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix3));
 
 	glUniform3fv(eyePosLoc[2], 1, glm::value_ptr(eyePos));
-	drawModel(gCubeModel3);
+	if(draw3){
+		drawModel(gCubeModel3);
+	}
+
 
 //--------------------------------------------------------------------------
 
@@ -797,7 +811,25 @@ void display()
     drawModel(gQuadModel);
 
 // -----------------------------------------------------------------
+// --------------------------------------------------------------------
 
+	// put bunny
+	glUseProgram(gProgram[0]); // Replace with actual program index for bunny
+	glUniformMatrix4fv(projectionMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(viewingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
+    glm::mat4 bunnyModelMatrix = computeBunnyModelMatrix(); // Function to compute bunny's model matrix
+
+	if(kill){
+		bunnyModelMatrix = bunnyModelMatrix * rotateBunny;
+	}
+    glUniformMatrix4fv(modelingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(bunnyModelMatrix));
+	// std::cout << "bunnyPos y = " << bunnyPosY << std::endl;
+	// std::cout << "bunnyPos Z = " << bunnyPosZ << std::endl;
+	glUniform3fv(eyePosLoc[0], 1, glm::value_ptr(eyePos));
+
+	
+    drawModel(gBunnyModel);
+	
 
 	jumpTime += 0.25;
 }
