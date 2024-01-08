@@ -20,13 +20,13 @@
 
 using namespace std;
 
-GLuint gProgram[2];
+GLuint gProgram[3];
 int gWidth, gHeight;
 
-GLint modelingMatrixLoc[2];
-GLint viewingMatrixLoc[2];
-GLint projectionMatrixLoc[2];
-GLint eyePosLoc[2];
+GLint modelingMatrixLoc[3];
+GLint viewingMatrixLoc[3];
+GLint projectionMatrixLoc[3];
+GLint eyePosLoc[3];
 
 glm::mat4 projectionMatrix;
 glm::mat4 viewingMatrix;
@@ -91,7 +91,7 @@ GLint gInVertexLoc, gInNormalLoc;
 int gVertexDataSizeInBytes, gNormalDataSizeInBytes;
 
 
-Model gBunnyModel, gQuadModel, gCubeModel;
+Model gBunnyModel, gQuadModel, gCubeModel, gCubeModel2, gCubeModel3;
 
 vector<Model> gModels;
 
@@ -281,14 +281,19 @@ void initShaders()
 
 	gProgram[0] = glCreateProgram();
 	gProgram[1] = glCreateProgram();
+	gProgram[2] = glCreateProgram();
 
 	// Create the shaders for both programs
 
 	GLuint vs1 = createVS("vert.glsl");
 	GLuint fs1 = createFS("frag.glsl");
 
+
 	GLuint vs2 = createVS("vert_checkerboard.glsl");
 	GLuint fs2 = createFS("frag_checkerboard.glsl");
+
+	GLuint vs3 = createVS("vertex_cube.glsl");
+	GLuint fs3 = createFS("frag_cube.glsl");
 
 	// Attach the shaders to the programs
 
@@ -297,6 +302,9 @@ void initShaders()
 
 	glAttachShader(gProgram[1], vs2);
 	glAttachShader(gProgram[1], fs2);
+
+	glAttachShader(gProgram[2], vs3);
+	glAttachShader(gProgram[2], fs3);
 
 	// Link the programs
 
@@ -319,9 +327,18 @@ void initShaders()
 		exit(-1);
 	}
 
+	glLinkProgram(gProgram[2]);
+	glGetProgramiv(gProgram[2], GL_LINK_STATUS, &status);
+
+	if (status != GL_TRUE)
+	{
+		cout << "Program link failed" << endl;
+		exit(-1);
+	}
+
 	// Get the locations of the uniform variables from both programs
 
-	for (int i = 0; i < 2; ++i)
+	for (int i = 0; i < 3; ++i)
 	{
 		modelingMatrixLoc[i] = glGetUniformLocation(gProgram[i], "modelingMatrix");
 		viewingMatrixLoc[i] = glGetUniformLocation(gProgram[i], "viewingMatrix");
@@ -405,12 +422,16 @@ void init(){
 	ParseObj("bunny.obj", gBunnyModel);
 	ParseObj("quad.obj", gQuadModel);
 	ParseObj("cube.obj", gCubeModel);
+	ParseObj("cube.obj", gCubeModel2);
+	ParseObj("cube.obj", gCubeModel3);
 
 	glEnable(GL_DEPTH_TEST);
 	initShaders();
 	initVBO(gBunnyModel);
 	initVBO(gQuadModel);
 	initVBO(gCubeModel);
+	initVBO(gCubeModel2);
+	initVBO(gCubeModel3);
 	// gModels.push_back(gQuadModel);
 	// gModels.push_back(gBunnyModel);
 
@@ -478,7 +499,7 @@ glm::mat4 computeBunnyModelMatrix() {
 	
 
 	// move bunny forward
-	bunnyPosZ -= 0.0000001f;
+	// bunnyPosZ -= 0.0000001f;
 
     // modelingMatrix = matT * matRz * matR *matS;
 
@@ -488,13 +509,33 @@ glm::mat4 computeBunnyModelMatrix() {
 }
 
 
-glm::mat4 computeCubeModelMatrix(){
-	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(0.0, -1.0, -2.0));
-	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.25, 0.25, 0.25));
+glm::mat4 computeCube1ModelMatrix(){
+
+	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(0.0, -1.0, -10.0));
+	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
 	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 
 	return matT * matS * matR;
 }
+
+glm::mat4 computeCube2ModelMatrix(){
+
+	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(-3.0, -1.0, -10.0));
+	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
+	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+
+	return matT * matS * matR;
+}
+
+glm::mat4 computeCube3ModelMatrix(){
+
+	glm::mat4 matT = glm::translate(glm::mat4(1.0), glm::vec3(3.0, -1.0, -10.0));
+	glm::mat4 matS = glm::scale(glm::mat4(1.0), glm::vec3(0.75, 2.0, 1.0));
+	glm::mat4 matR = glm::rotate(glm::mat4(1.0), glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+
+	return matT * matS * matR;
+}
+
 
 // Set the position where you want the start of the path
 float quadPosX = 0.0f; // Centered on X
@@ -572,6 +613,7 @@ void display()
 	 // Update the offset for the path animation
     offsetZ -= 0.1f;  // Adjust this value for speed of animation
 
+// --------------------------------------------------------------------
 
 	// put bunny
 	glUseProgram(gProgram[0]); // Replace with actual program index for bunny
@@ -586,18 +628,50 @@ void display()
 	glUniform3fv(eyePosLoc[0], 1, glm::value_ptr(eyePos));
     drawModel(gBunnyModel);
 	
+
+//--------------------------------------------------------------------------
+	
 	//put the cube
-	glUseProgram(gProgram[0]); // Replace with actual program index for bunny
-	glUniformMatrix4fv(projectionMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniformMatrix4fv(viewingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
-    glm::mat4 cubeModelMatrix = computeCubeModelMatrix(); // Function to compute bunny's model matrix
+	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
+	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
 
-    glUniformMatrix4fv(modelingMatrixLoc[0], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix));
+    glm::mat4 cubeModelMatrix = computeCube1ModelMatrix(); // Function to compute bunny's model matrix
+    glUniformMatrix4fv(modelingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix));
 
-	glUniform3fv(eyePosLoc[0], 1, glm::value_ptr(eyePos));
+	glUniform3fv(eyePosLoc[2], 1, glm::value_ptr(eyePos));
     drawModel(gCubeModel);
 
+//--------------------------------------------------------------------------
+	
+	//put the cube2
+	
+	//put the cube
+	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
+	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
+    
+	glm::mat4 cubeModelMatrix2 = computeCube2ModelMatrix(); // Function to compute bunny's model matrix
+    glUniformMatrix4fv(modelingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix2));
 
+	glUniform3fv(eyePosLoc[2], 1, glm::value_ptr(eyePos));
+    drawModel(gCubeModel2);
+	
+// --------------------------------------------------------------------------
+	//put the cube3
+	//put the cube
+	
+	glUseProgram(gProgram[2]); // Replace with actual program index for bunny
+	glUniformMatrix4fv(projectionMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(viewingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
+	glm::mat4 cubeModelMatrix3 = computeCube3ModelMatrix(); // Function to compute bunny's model matrix
+
+	glUniformMatrix4fv(modelingMatrixLoc[2], 1, GL_FALSE, glm::value_ptr(cubeModelMatrix3));
+
+	glUniform3fv(eyePosLoc[2], 1, glm::value_ptr(eyePos));
+	drawModel(gCubeModel3);
+
+//--------------------------------------------------------------------------
 
 	// Quad Transformations
 	glUseProgram(gProgram[1]);
@@ -605,13 +679,11 @@ void display()
 	GLuint offsetLoc = glGetUniformLocation(gProgram[1], "offset");
 	GLuint offsetZLoc = glGetUniformLocation(gProgram[1], "offsetZ");
 	GLuint scaleLoc = glGetUniformLocation(gProgram[1], "scale");
-
 	
 	// set the values
 	glUniform1f(offsetLoc, offsetValue);
 	glUniform1f(offsetZLoc, offsetZ);
 	glUniform1f(scaleLoc, scaleValue);
-
 
 	glUniformMatrix4fv(projectionMatrixLoc[1], 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(viewingMatrixLoc[1], 1, GL_FALSE, glm::value_ptr(viewingMatrix));
@@ -624,7 +696,7 @@ void display()
 	
     drawModel(gQuadModel);
 
-
+// -----------------------------------------------------------------
 
 
 	jumpTime += 0.25;
